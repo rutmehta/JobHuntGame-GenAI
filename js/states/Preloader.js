@@ -19,6 +19,9 @@ export default class Preloader extends Phaser.Scene {
         });
         loadingText.setOrigin(0.5, 0.5);
 
+        // In Preloader.js inside the preload() method
+        this.load.audio('bgMusic', 'assets/audio/background_music.mp3');
+
         // Update progress bar
         this.load.on('progress', (value) => {
             progressBar.clear();
@@ -33,8 +36,8 @@ export default class Preloader extends Phaser.Scene {
     loadGameAssets() {
         // Player sprites
         this.load.spritesheet('player', 'assets/sprites/player.png', {
-            frameWidth: 32,
-            frameHeight: 48
+            frameWidth: 110,
+            frameHeight: 220
         });
 
         // Platform and background assets

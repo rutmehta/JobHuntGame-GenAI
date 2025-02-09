@@ -21,12 +21,13 @@ export default class Level extends Phaser.Scene {
 
         // Create player
         this.player = this.physics.add.sprite(400, 300, 'player');
+        this.player.setScale(0.4); // Scales the player to 50% of its original size
         this.player.setCollideWorldBounds(true);
         
         // Player animations
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 16 }),
             frameRate: 10,
             repeat: -1
         });
@@ -39,7 +40,7 @@ export default class Level extends Phaser.Scene {
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 5, end: 8 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
