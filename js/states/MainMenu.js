@@ -5,7 +5,7 @@ export default class MainMenu extends Phaser.Scene {
 
     create() {
         // Add background
-        this.add.image(400, 300, 'menu_bg');
+        this.add.image(400, 300, 'background');
 
         // Create the background music sound instance with looping enabled
         this.bgMusic = this.sound.add('bgMusic', {
