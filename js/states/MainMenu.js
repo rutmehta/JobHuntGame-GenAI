@@ -5,50 +5,68 @@ export default class MainMenu extends Phaser.Scene {
 
     create() {
         // Add background
-        this.add.image(400, 300, 'background');
+        this.add.image(400, 300, 'menu_bg');
 
-        // Add game title
-        const title = this.add.image(400, 150, 'title');
-        title.setScale(0.8);
+        // Title text
+        this.add.text(400, 150, 'CS Career Quest', {
+            font: '48px Arial',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6
+        }).setOrigin(0.5);
 
-        // Create menu buttons
-        this.createButton(400, 300, 'Start Game', () => this.startGame());
-        this.createButton(400, 380, 'Options', () => this.showOptions());
-        this.createButton(400, 460, 'Credits', () => this.showCredits());
-    }
-
-    createButton(x, y, text, callback) {
-        const button = this.add.image(x, y, 'button');
-        button.setInteractive();
-
-        const buttonText = this.add.text(x, y, text, {
+        // Button style configuration
+        const buttonStyle = {
             font: '24px Arial',
-            fill: '#ffffff'
-        });
-        buttonText.setOrigin(0.5);
+            fill: '#ffffff',
+            padding: { x: 20, y: 10 },
+            backgroundColor: '#2d2d2d'
+        };
 
-        button.on('pointerover', () => {
-            button.setTint(0xcccccc);
-        });
+        // Play Button
+        const playButton = this.add.text(
+            this.cameras.main.centerX,
+            this.cameras.main.centerY - 60,
+            'Start Job Hunt',
+            buttonStyle
+        )
+        .setOrigin(0.5)
+        .setScale(0.8)
+        .setInteractive();
 
-        button.on('pointerout', () => {
-            button.clearTint();
-        });
+        // Tutorial Button
+        const tutorialButton = this.add.text(
+            this.cameras.main.centerX,
+            playButton.y + 70,
+            'Career Guide',
+            buttonStyle
+        )
+        .setOrigin(0.5)
+        .setScale(0.8)
+        .setInteractive();
 
-        button.on('pointerdown', callback);
-    }
+        // Credits Button
+        const creditsButton = this.add.text(
+            this.cameras.main.centerX,
+            tutorialButton.y + 70,
+            'Office Credits',
+            buttonStyle
+        )
+        .setOrigin(0.5)
+        .setScale(0.8)
+        .setInteractive();
 
-    startGame() {
-        this.scene.start('Level');
-    }
+        // Button interactivity
+        playButton.on('pointerover', () => playButton.setBackgroundColor('#4d4d4d'));
+        playButton.on('pointerout', () => playButton.setBackgroundColor('#2d2d2d'));
+        playButton.on('pointerdown', () => this.scene.start('Level'));
 
-    showOptions() {
-        // Implement options menu
-        console.log('Options menu - To be implemented');
-    }
+        tutorialButton.on('pointerover', () => tutorialButton.setBackgroundColor('#4d4d4d'));
+        tutorialButton.on('pointerout', () => tutorialButton.setBackgroundColor('#2d2d2d'));
+        tutorialButton.on('pointerdown', () => this.scene.start('Tutorial'));
 
-    showCredits() {
-        // Implement credits screen
-        console.log('Credits screen - To be implemented');
+        creditsButton.on('pointerover', () => creditsButton.setBackgroundColor('#4d4d4d'));
+        creditsButton.on('pointerout', () => creditsButton.setBackgroundColor('#2d2d2d'));
+        creditsButton.on('pointerdown', () => this.scene.start('Credits'));
     }
 }

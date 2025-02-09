@@ -12,8 +12,7 @@ export default class Boot extends Phaser.Scene {
         // Set up any game scaling options
         this.scale.pageAlignHorizontally = true;
 
-        // Initialize any game settings
-        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+        // No need to initialize physics here as it's already configured in game.js
 
         // Transition to the Preloader state
         this.scene.start('Preloader');

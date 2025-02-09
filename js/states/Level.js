@@ -4,120 +4,101 @@ export default class Level extends Phaser.Scene {
     }
 
     create() {
-        // Add background
-        this.add.image(400, 300, 'background');
+        // Set world bounds (1600x600)
+        this.physics.world.setBounds(0, 0, 1600, 600);
+
+        // Create scrolling background
+        this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background');
+        this.bg.setOrigin(0, 0);
+        this.bg.setScrollFactor(0);
 
         // Create platforms group
         this.platforms = this.physics.add.staticGroup();
-        this.createPlatforms();
+        
+        // Create ground platform
+        this.platforms.create(800, 580, 'platform').setScale(4).refreshBody().setImmovable(true);
+        this.generateRandomPlatforms(4);
 
         // Create player
-        this.player = this.createPlayer();
+        this.player = this.physics.add.sprite(400, 300, 'player');
+        this.player.setCollideWorldBounds(true);
+        
+        // Player animations
+        this.anims.create({
+            key: 'left',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
 
-        // Create enemies
-        this.enemies = this.physics.add.group();
-        this.createEnemies();
+        this.anims.create({
+            key: 'turn',
+            frames: [{ key: 'player', frame: 4 }],
+            frameRate: 20
+        });
 
-        // Create collectibles
-        this.collectibles = this.physics.add.group();
-        this.createCollectibles();
+        this.anims.create({
+            key: 'right',
+            frames: this.anims.generateFrameNumbers('player', { start: 5, end: 8 }),
+            frameRate: 10,
+            repeat: -1
+        });
 
-        // Set up collisions
-        this.setupCollisions();
+        // Add collision
+        this.physics.add.collider(this.player, this.platforms);
+
+        // Set up camera
+        this.cameras.main.setBounds(0, 0, 1600, 600);
+        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
         // Set up controls
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     }
 
-    createPlatforms() {
-        // Create ground
-        this.platforms.create(400, 568, 'platform').setScale(2).refreshBody();
+    generateRandomPlatforms(count) {
+        const bounds = {
+            minX: 100, maxX: 1500,
+            minY: 100, maxY: 500,
+            minSpacing: 150
+        };
 
-        // Create platforms
-        this.platforms.create(600, 400, 'platform');
-        this.platforms.create(50, 250, 'platform');
-        this.platforms.create(750, 220, 'platform');
-    }
+        let prevX = -Infinity;
+        for (let i = 0; i < count; i++) {
+            let x, y;
+            do {
+                x = Phaser.Math.Between(bounds.minX, bounds.maxX);
+                y = Phaser.Math.Between(bounds.minY, bounds.maxY);
+            } while (Math.abs(x - prevX) < bounds.minSpacing);
 
-    createPlayer() {
-        const player = this.physics.add.sprite(100, 450, 'player');
-        player.setBounce(0.2);
-        player.setCollideWorldBounds(true);
-        return player;
-    }
-
-    createEnemies() {
-        // Create procrastination monster
-        const enemy = this.enemies.create(400, 200, 'procrastination');
-        enemy.setBounce(0.2);
-        enemy.setCollideWorldBounds(true);
-        enemy.setVelocityX(100);
-    }
-
-    createCollectibles() {
-        // Create code snippets
-        for (let i = 0; i < 5; i++) {
-            const x = Phaser.Math.Between(0, 800);
-            const y = Phaser.Math.Between(0, 400);
-            const collectible = this.collectibles.create(x, y, 'code-snippet');
-            collectible.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+            this.platforms.create(x, y, 'platform')
+                .setImmovable(true)
+                .setScale(Phaser.Math.FloatBetween(0.8, 1.2))
+                .refreshBody();
+            prevX = x;
         }
-    }
-
-    setupCollisions() {
-        // Player collisions
-        this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.collider(this.enemies, this.platforms);
-        this.physics.add.collider(this.collectibles, this.platforms);
-
-        // Enemy collision with player
-        this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
-
-        // Collectible collision with player
-        this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
     }
 
     update() {
-        // Handle player movement
+        // Handle movement
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
-            this.player.anims.play('walk', true);
-            this.player.flipX = true;
+            this.player.anims.play('left', true);
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
-            this.player.anims.play('walk', true);
-            this.player.flipX = false;
+            this.player.anims.play('right', true);
         } else {
             this.player.setVelocityX(0);
-            this.player.anims.play('idle');
+            this.player.anims.play('turn');
+        }
+    
+        // Handle jumping (both UP arrow and SPACE)
+        if ((this.cursors.up.isDown || this.spaceKey.isDown) && this.player.body.blocked.down) {
+            this.player.setVelocityY(-500); // Stronger jump
+            this.player.anims.play('jump'); // Add this animation if needed
         }
 
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-330);
-            this.player.anims.play('jump');
-        }
-
-        // Update enemy movement
-        this.updateEnemies();
-    }
-
-    updateEnemies() {
-        this.enemies.children.iterate((enemy) => {
-            if (enemy.body.velocity.x > 0 && enemy.x > 750) {
-                enemy.setVelocityX(-100);
-            } else if (enemy.body.velocity.x < 0 && enemy.x < 50) {
-                enemy.setVelocityX(100);
-            }
-        });
-    }
-
-    hitEnemy(player, enemy) {
-        // Implement player-enemy collision logic
-        this.scene.start('InterviewState');
-    }
-
-    collectItem(player, collectible) {
-        collectible.destroy();
-        // Implement collectible logic
+        // Update background position
+        this.bg.tilePositionX = this.cameras.main.scrollX;
     }
 }
