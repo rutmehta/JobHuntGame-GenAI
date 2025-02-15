@@ -6,6 +6,12 @@
     <title>CS Student Job Quest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="An interactive game about a CS student's journey to find a job">
+
+    <!-- PWA Meta Tags - Adding these won't break existing functionality -->
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="manifest" href="/public/manifest.json">
+    <link rel="apple-touch-icon" href="/public/icons/icon-192x192.png">
+
     <script type="module" src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
         body,
@@ -104,6 +110,13 @@
             text-transform: uppercase;
             color: #e94560;
         }
+
+        /* Simple mobile optimization */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 15px 25px;
+            }
+        }
     </style>
 </head>
 
@@ -157,7 +170,26 @@
         </div>
     </div>
 
+    <!-- Your game scripts -->
     <script type="module" src="js/game.js"></script>
+
+    <!-- Service Worker Registration - Adding at the end to not interfere with game loading -->
+    <script>
+        // Only register service worker after game is loaded
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/public/service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.error('ServiceWorker registration failed: ', err);
+                    });
+            }
+        });
+    </script>
+
+    <!-- Game UI Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             class GameUI {
