@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <title>CS Student Job Quest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="An interactive game about a CS student's journey to find a job">
+    <!-- Phaser & nipple.js -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
     <style>
-        /* Your existing base styles */
+        /* Base styles */
         body,
         html {
             margin: 0;
@@ -19,7 +20,6 @@
             color: #ffffff;
         }
 
-        /* All your existing styles remain exactly the same */
         .screen {
             display: none;
             height: 100%;
@@ -51,10 +51,11 @@
         #game-container {
             width: 100%;
             height: 100%;
-            max-width: 800px;
+            max-width: 800px; /* For desktop */
             margin: 0 auto;
         }
 
+        /* Header controls (Menu, Restart, etc.) */
         .game-controls {
             position: fixed;
             top: 0;
@@ -107,23 +108,32 @@
             color: #e94560;
         }
 
-        /* Add mobile controls (only these new styles) */
-        .mobile-controls {
+        /* Mobile control styles (joystick/buttons) */
+        #joystick-zone {
             position: fixed;
             bottom: 20px;
-            left: 0;
-            right: 0;
+            left: 20px;
+            width: 120px;
+            height: 120px;
             display: none;
-            justify-content: space-between;
-            padding: 20px;
+            z-index: 1000;
+            touch-action: none;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            gap: 10px;
             z-index: 1000;
         }
 
-        .control-button {
+        .action-button {
             width: 60px;
             height: 60px;
-            background: rgba(40, 60, 134, 0.7);
-            border: 2px solid #fff;
+            background: rgba(69, 162, 71, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             color: white;
             font-size: 24px;
@@ -133,50 +143,42 @@
             touch-action: none;
         }
 
-        .jump-button {
-            background: rgba(69, 162, 71, 0.7);
-        }
-
-        #orientation-message {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-        }
-
+        /* Force the game and container to fill screen on mobile */
         @media (max-width: 768px) {
-            .mobile-controls {
-                display: flex;
+            #joystick-zone,
+            .action-buttons {
+                display: block;
             }
-        }
 
-        @media (max-width: 768px) and (orientation: portrait) {
-            #orientation-message {
-                display: flex;
+            #game-screen {
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                overflow: hidden;
+            }
+
+            #game-container {
+                max-width: none;
+                width: 100%;
+                height: 100%;
+                margin: 0;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Your existing game controls -->
+    <!-- Game Controls (fixed header) -->
     <nav class="game-controls" id="game-controls">
         <button class="btn" id="game-menu-button">Menu</button>
         <button class="btn" id="game-restart-button">Restart</button>
         <button class="btn" id="game-instructions-button">Instructions</button>
     </nav>
 
+    <!-- HUD -->
     <div class="hud" id="hud" aria-live="polite"></div>
 
-    <!-- Your existing screens remain exactly the same -->
+    <!-- Start Menu Screen -->
     <div id="start-menu-screen" class="screen active">
         <div class="container">
             <h1 class="game-title">CS Student Job Quest</h1>
@@ -186,10 +188,12 @@
         </div>
     </div>
 
+    <!-- Main Game Screen -->
     <div id="game-screen" class="screen">
         <div id="game-container"></div>
     </div>
 
+    <!-- Settings Screen -->
     <div id="settings-screen" class="screen">
         <div class="container">
             <h2>Settings</h2>
@@ -197,19 +201,21 @@
         </div>
     </div>
 
+    <!-- Instructions Screen -->
     <div id="instructions-screen" class="screen">
         <div class="container">
             <h2>Instructions</h2>
             <h3>How to Play:</h3>
             <ul>
-                <li>Use arrow keys to move</li>
-                <li>Space to interact</li>
+                <li>Use arrow keys or joystick to move</li>
+                <li>Space or action button to interact</li>
                 <li>Collect skills and experience points</li>
             </ul>
             <button class="btn" id="instructions-back-button">Back</button>
         </div>
     </div>
 
+    <!-- Game Over Screen -->
     <div id="game-over-screen" class="screen">
         <div class="container">
             <div id="game-over-message"></div>
@@ -218,61 +224,53 @@
         </div>
     </div>
 
-    <!-- Add only these new elements -->
-    <div id="orientation-message">
-        <div>
-            <h2>Please Rotate Your Device</h2>
-            <p>This game works best in landscape mode</p>
-        </div>
+    <!-- Mobile Controls -->
+    <div id="joystick-zone"></div>
+    <div class="action-buttons">
+        <button class="action-button" id="jump-button">↑</button>
+        <button class="action-button" id="action-button">A</button>
     </div>
 
-    <div class="mobile-controls">
-        <div class="control-button" id="left-button">←</div>
-        <div class="control-button jump-button" id="jump-button">↑</div>
-        <div class="control-button" id="right-button">→</div>
-    </div>
-
+    <!-- Import Phaser game logic after DOM has loaded -->
     <script type="module" src="js/game.js"></script>
 
-    <!-- Your existing GameUI script -->
+    <!-- UI & Joystick Setup -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Your existing GameUI class definition remains exactly the same
+            // UI Manager
             class GameUI {
                 constructor() {
                     this.startMenuScreen = document.getElementById('start-menu-screen');
                     this.settingsScreen = document.getElementById('settings-screen');
                     this.instructionsScreen = document.getElementById('instructions-screen');
-                    this.gameContainer = document.getElementById('game-screen');
+                    this.gameScreen = document.getElementById('game-screen');
                     this.gameOverScreen = document.getElementById('game-over-screen');
                     this.gameControls = document.getElementById('game-controls');
                     this.hud = document.getElementById('hud');
                 }
 
-                // All your existing methods remain exactly the same
                 swapToScreen(screen) {
+                    // Hide all
                     this.startMenuScreen.classList.remove('active');
                     this.settingsScreen.classList.remove('active');
                     this.instructionsScreen.classList.remove('active');
-                    this.gameContainer.classList.remove('active');
+                    this.gameScreen.classList.remove('active');
                     this.gameOverScreen.classList.remove('active');
 
+                    // Show target
                     if (screen.id !== 'game-screen') {
                         screen.classList.add('active');
-                    }
-
-                    if (screen.id === 'game-screen') {
+                        this.gameControls.style.display = 'none';
+                        this.hud.style.display = 'none';
+                    } else {
                         screen.classList.add('active');
                         this.gameControls.style.display = 'block';
                         this.hud.style.display = 'block';
-                    } else {
-                        this.gameControls.style.display = 'none';
-                        this.hud.style.display = 'none';
                     }
                 }
 
                 startGame() {
-                    this.swapToScreen(this.gameContainer);
+                    this.swapToScreen(this.gameScreen);
                 }
 
                 mainMenu() {
@@ -290,52 +288,164 @@
 
             const gameUI = new GameUI();
 
-            // Your existing event listeners remain exactly the same
+            // Main Menu Buttons
             document.getElementById('play-button').addEventListener('click', () => gameUI.startGame());
             document.getElementById('settings-button').addEventListener('click', () => gameUI.settings());
             document.getElementById('instructions-button').addEventListener('click', () => gameUI.instructions());
+
+            // Settings / Instructions Back Buttons
             document.getElementById('settings-back-button').addEventListener('click', () => gameUI.mainMenu());
             document.getElementById('instructions-back-button').addEventListener('click', () => gameUI.mainMenu());
+
+            // In-Game Menu Buttons
             document.getElementById('game-menu-button').addEventListener('click', () => gameUI.mainMenu());
             document.getElementById('game-restart-button').addEventListener('click', () => gameUI.startGame());
             document.getElementById('game-instructions-button').addEventListener('click', () => gameUI.instructions());
+
+            // Game Over Buttons
             document.getElementById('play-again-button').addEventListener('click', () => gameUI.startGame());
             document.getElementById('main-menu-button').addEventListener('click', () => gameUI.mainMenu());
 
-            // Add only this new code for mobile controls
-            const mobileButtons = {
-                left: document.getElementById('left-button'),
-                right: document.getElementById('right-button'),
-                jump: document.getElementById('jump-button')
-            };
+            // Joystick Initialization
+            let joystick = nipplejs.create({
+                zone: document.getElementById('joystick-zone'),
+                mode: 'semi',
+                position: { left: '50%', top: '50%' },
+                color: 'white',
+                size: 100
+            });
 
-            function simulateKey(keyCode, type) {
-                const event = new KeyboardEvent(type, {
-                    keyCode: keyCode,
-                    which: keyCode,
-                    key: keyCode === 37 ? 'ArrowLeft' :
-                        keyCode === 39 ? 'ArrowRight' :
-                            keyCode === 38 ? 'ArrowUp' : '',
-                    bubbles: true
-                });
-                document.dispatchEvent(event);
-            }
+            // Track which directions are currently active
+            let moveLeft = false;
+            let moveRight = false;
 
-            Object.entries(mobileButtons).forEach(([direction, button]) => {
-                const keyCode = direction === 'left' ? 37 : direction === 'right' ? 39 : 38;
+            // Listen for "move" events
+            joystick.on('move', (evt, data) => {
+                // If there's no direction or only a vertical direction, release horizontal movement
+                if (!data.direction || !data.direction.x) {
+                    if (moveLeft) {
+                        window.dispatchEvent(new KeyboardEvent('keyup', {
+                            key: 'ArrowLeft',
+                            code: 'ArrowLeft',
+                            keyCode: 37
+                        }));
+                        moveLeft = false;
+                    }
+                    if (moveRight) {
+                        window.dispatchEvent(new KeyboardEvent('keyup', {
+                            key: 'ArrowRight',
+                            code: 'ArrowRight',
+                            keyCode: 39
+                        }));
+                        moveRight = false;
+                    }
+                    return;
+                }
 
-                button.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    simulateKey(keyCode, 'keydown');
-                });
+                // If direction.x === 'left'
+                if (data.direction.x === 'left') {
+                    // If we were moving right, release it first
+                    if (moveRight) {
+                        window.dispatchEvent(new KeyboardEvent('keyup', {
+                            key: 'ArrowRight',
+                            code: 'ArrowRight',
+                            keyCode: 39
+                        }));
+                        moveRight = false;
+                    }
+                    // Then press left if not already moving left
+                    if (!moveLeft) {
+                        moveLeft = true;
+                        window.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'ArrowLeft',
+                            code: 'ArrowLeft',
+                            keyCode: 37
+                        }));
+                    }
+                }
+                // If direction.x === 'right'
+                else if (data.direction.x === 'right') {
+                    // If we were moving left, release it first
+                    if (moveLeft) {
+                        window.dispatchEvent(new KeyboardEvent('keyup', {
+                            key: 'ArrowLeft',
+                            code: 'ArrowLeft',
+                            keyCode: 37
+                        }));
+                        moveLeft = false;
+                    }
+                    // Then press right if not already
+                    if (!moveRight) {
+                        moveRight = true;
+                        window.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'ArrowRight',
+                            code: 'ArrowRight',
+                            keyCode: 39
+                        }));
+                    }
+                }
+            });
 
-                button.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    simulateKey(keyCode, 'keyup');
-                });
+            // When the joystick is completely released
+            joystick.on('end', () => {
+                // Release left if it's active
+                if (moveLeft) {
+                    window.dispatchEvent(new KeyboardEvent('keyup', {
+                        key: 'ArrowLeft',
+                        code: 'ArrowLeft',
+                        keyCode: 37
+                    }));
+                    moveLeft = false;
+                }
+                // Release right if it's active
+                if (moveRight) {
+                    window.dispatchEvent(new KeyboardEvent('keyup', {
+                        key: 'ArrowRight',
+                        code: 'ArrowRight',
+                        keyCode: 39
+                    }));
+                    moveRight = false;
+                }
+            });
+
+            // Jump Button
+            const jumpButton = document.getElementById('jump-button');
+            jumpButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'ArrowUp',
+                    code: 'ArrowUp',
+                    keyCode: 38
+                }));
+            });
+            jumpButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: 'ArrowUp',
+                    code: 'ArrowUp',
+                    keyCode: 38
+                }));
+            });
+
+            // Action Button (Space)
+            const actionButton = document.getElementById('action-button');
+            actionButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: ' ',
+                    code: 'Space',
+                    keyCode: 32
+                }));
+            });
+            actionButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: ' ',
+                    code: 'Space',
+                    keyCode: 32
+                }));
             });
         });
     </script>
 </body>
-
 </html>
