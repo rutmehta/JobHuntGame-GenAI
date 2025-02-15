@@ -43,6 +43,7 @@ export default class Preloader extends Phaser.Scene {
         // Platform and background assets
         this.load.image('platform', 'assets/images/platform.png');
         this.load.image('background', 'assets/images/background.png');
+        this.load.image('LevelCompleteScreen', 'assets/images/LevelCompleteScreen.png');
 
         // Enemy sprites
         this.load.spritesheet('procrastination', 'assets/sprites/procrastination.png', {

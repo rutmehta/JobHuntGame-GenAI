@@ -1,4 +1,4 @@
-// LevelComplete.js (New Scene for Exit Screen)
+// Updated LevelComplete.js with Background Image
 export default class LevelComplete extends Phaser.Scene {
     constructor() {
         super({ key: 'LevelComplete' });
@@ -9,39 +9,38 @@ export default class LevelComplete extends Phaser.Scene {
     }
 
     create() {
-        // Pixel-styled level complete message
-        this.add.text(400, 200, 'Level Complete!', {
+        // Load background image
+        this.add.image(375, 300, 'LevelCompleteScreen').setOrigin(0.5, 0.5);
+
+        // Styled text message
+        /*
+        this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 3, 'Level Complete!', {
             font: '32px pixel',
             fill: '#ffffff',
             stroke: '#000000',
             strokeThickness: 4
         }).setOrigin(0.5);
-
-        this.add.text(400, 250, 'More coding awaits...', {
-            font: '20px pixel',
-            fill: '#ffcc00'
-        }).setOrigin(0.5);
-
-        // Continue Button
-        const continueButton = this.add.text(400, 350, 'Continue', {
+        */
+        // Button styling and interactions
+        const buttonStyle = {
             font: '24px pixel',
             fill: '#ffffff',
+            padding: { x: 20, y: 10 },
             backgroundColor: '#2d2d2d'
-        }).setOrigin(0.5).setInteractive();
+        };
 
-        continueButton.on('pointerdown', () => {
-            this.scene.start('Level', { levelNumber: this.levelNumber + 1 });
-        });
+        const continueButton = this.add.text(400, 350, 'Continue', buttonStyle)
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerover', () => continueButton.setBackgroundColor('#4d4d4d'))
+            .on('pointerout', () => continueButton.setBackgroundColor('#2d2d2d'))
+            .on('pointerdown', () => this.scene.start('Level', { levelNumber: this.levelNumber + 1 }));
 
-        // Main Menu Button
-        const menuButton = this.add.text(400, 400, 'Main Menu', {
-            font: '24px pixel',
-            fill: '#ffffff',
-            backgroundColor: '#2d2d2d'
-        }).setOrigin(0.5).setInteractive();
-
-        menuButton.on('pointerdown', () => {
-            this.scene.start('MainMenu');
-        });
+        const menuButton = this.add.text(400, 400, 'Main Menu', buttonStyle)
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerover', () => menuButton.setBackgroundColor('#4d4d4d'))
+            .on('pointerout', () => menuButton.setBackgroundColor('#2d2d2d'))
+            .on('pointerdown', () => this.scene.start('MainMenu'));
     }
 }
