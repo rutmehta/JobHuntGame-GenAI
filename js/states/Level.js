@@ -1,29 +1,40 @@
+// Level.js (Fixed Audio and Platform Function Issue)
+import LevelComplete from './LevelComplete.js';
+
 export default class Level extends Phaser.Scene {
     constructor() {
         super({ key: 'Level' });
+        this.levelNumber = 1; // Start at level 1
+    }
+
+    init(data) {
+        this.levelNumber = data.levelNumber || 1;
     }
 
     create() {
-        // Set world bounds (1600x600)
+        // Ensure Phaser is properly loaded
+        if (typeof Phaser === 'undefined') {
+            console.error('Phaser is not loaded correctly. Check the script reference in index.html');
+            return;
+        }
+
+        // Set world bounds
         this.physics.world.setBounds(0, 0, 1600, 600);
 
-        // Create scrolling background
-        this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background');
-        this.bg.setOrigin(0, 0);
-        this.bg.setScrollFactor(0);
-
-        // Create platforms group
+        // Background and platforms
+        this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background').setOrigin(0, 0);
         this.platforms = this.physics.add.staticGroup();
+        this.platforms.create(800, 580, 'platform').setScale(4).refreshBody();
         
-        // Create ground platform
-        this.platforms.create(800, 580, 'platform').setScale(4).refreshBody().setImmovable(true);
-        this.generateRandomPlatforms(4);
+        // Ensure function is correctly called
+        this.generateRandomPlatforms(this.platforms, 4);
 
         // Create player
-        this.player = this.physics.add.sprite(400, 300, 'player');
-        this.player.setScale(0.4); // Scales the player to 50% of its original size
+        this.player = this.physics.add.sprite(100, 300, 'player');
+        this.player.setScale(0.4);
         this.player.setCollideWorldBounds(true);
-        
+        this.physics.add.collider(this.player, this.platforms);
+
         // Player animations
         this.anims.create({
             key: 'left',
@@ -45,9 +56,6 @@ export default class Level extends Phaser.Scene {
             repeat: -1
         });
 
-        // Add collision
-        this.physics.add.collider(this.player, this.platforms);
-
         // Set up camera
         this.cameras.main.setBounds(0, 0, 1600, 600);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
@@ -57,7 +65,30 @@ export default class Level extends Phaser.Scene {
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     }
 
-    generateRandomPlatforms(count) {
+    update() {
+        // Movement logic
+        if (this.cursors.left.isDown) {
+            this.player.setVelocityX(-160);
+            this.player.anims.play('left', true);
+        } else if (this.cursors.right.isDown) {
+            this.player.setVelocityX(160);
+            this.player.anims.play('right', true);
+        } else {
+            this.player.setVelocityX(0);
+            this.player.anims.play('turn');
+        }
+
+        if ((this.cursors.up.isDown || this.spaceKey.isDown) && this.player.body.blocked.down) {
+            this.player.setVelocityY(-500);
+        }
+
+        // Check if player reaches the end of the screen
+        if (this.player.x >= 1550) {
+            this.completeLevel();
+        }
+    }
+
+    generateRandomPlatforms(platforms, count) {
         const bounds = {
             minX: 100, maxX: 1500,
             minY: 100, maxY: 500,
@@ -72,7 +103,7 @@ export default class Level extends Phaser.Scene {
                 y = Phaser.Math.Between(bounds.minY, bounds.maxY);
             } while (Math.abs(x - prevX) < bounds.minSpacing);
 
-            this.platforms.create(x, y, 'platform')
+            platforms.create(x, y, 'platform')
                 .setImmovable(true)
                 .setScale(Phaser.Math.FloatBetween(0.8, 1.2))
                 .refreshBody();
@@ -80,26 +111,7 @@ export default class Level extends Phaser.Scene {
         }
     }
 
-    update() {
-        // Handle movement
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
-        } else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('turn');
-        }
-    
-        // Handle jumping (both UP arrow and SPACE)
-        if ((this.cursors.up.isDown || this.spaceKey.isDown) && this.player.body.blocked.down) {
-            this.player.setVelocityY(-500); // Stronger jump
-            this.player.anims.play('jump'); // Add this animation if needed
-        }
-
-        // Update background position
-        this.bg.tilePositionX = this.cameras.main.scrollX;
+    completeLevel() {
+        this.scene.start('LevelComplete', { levelNumber: this.levelNumber });
     }
 }

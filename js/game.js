@@ -4,6 +4,7 @@ import MainMenu from './states/MainMenu.js';
 import Level from './states/Level.js';
 import InterviewState from './states/InterviewState.js';
 import MiniGame from './states/MiniGame.js';
+import LevelComplete from './states/LevelComplete.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config = {
             debug: true
         }
     },
-    scene: [Boot, Preloader, MainMenu, Level, InterviewState, MiniGame]
+    scene: [Boot, Preloader, MainMenu, Level, LevelComplete, InterviewState, MiniGame]
 };
 
 const game = new Phaser.Game(config);
