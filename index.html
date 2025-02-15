@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>CS Student Job Quest</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
     <meta name="description" content="An interactive game about a CS student's journey to find a job">
 
     <!-- PWA Meta Tags -->
@@ -21,20 +21,20 @@
             box-sizing: border-box;
         }
 
-        html,
-        body {
+        html, body {
             height: 100%;
             width: 100%;
-            overflow: hidden;
             font-family: 'Orbitron', sans-serif;
             background-color: #1a1a2e;
             color: #ffffff;
             overscroll-behavior: none;
+            touch-action: none;
+            user-select: none;
         }
 
-        /* Landscape orientation and full-screen game container */
+        /* Game container dynamically scaling */
         #game-container {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100vw;
@@ -43,43 +43,40 @@
             justify-content: center;
             align-items: center;
             background-color: #1a1a2e;
-            touch-action: none;
         }
 
-        /* Mobile controls */
+        /* Mobile-friendly controls */
         .mobile-controls {
             position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            padding: 20px;
+            gap: 10px;
             z-index: 1000;
-            pointer-events: none;
         }
 
         .control-button {
-            width: 60px;
-            height: 60px;
+            width: 12vw;
+            height: 12vw;
+            max-width: 60px;
+            max-height: 60px;
             background: rgba(40, 60, 134, 0.7);
             border: 2px solid #fff;
             border-radius: 50%;
             color: white;
-            font-size: 24px;
+            font-size: 5vw;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
-            touch-action: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .jump-button {
             background: rgba(69, 162, 71, 0.7);
         }
 
-        /* Game controls */
+        /* Game controls UI (Top-right corner) */
         .game-controls {
             position: fixed;
             top: 10px;
@@ -99,30 +96,7 @@
         }
 
         /* Orientation lock for mobile */
-        @media (max-width: 768px) {
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background-color: #1a1a2e;
-            }
-
-            #orientation-lock {
-                display: none;
-            }
-
-            * {
-                user-select: none;
-                -webkit-user-select: none;
-            }
-        }
-
-        /* Orientation warning for landscape-only mobile devices */
-        @media (max-width: 768px) and (orientation: portrait) {
-            body {
-                background-color: #1a1a2e;
-            }
-
+        @media (orientation: portrait) {
             #orientation-lock {
                 display: flex;
                 position: fixed;
@@ -137,12 +111,8 @@
                 align-items: center;
                 text-align: center;
                 z-index: 9999;
-                padding: 20px;
             }
-
-            #game-container,
-            .mobile-controls,
-            .game-controls {
+            #game-container, .mobile-controls, .game-controls {
                 display: none;
             }
         }
@@ -154,11 +124,10 @@
     <div id="orientation-lock">
         <h2>Please Rotate Your Device</h2>
         <p>This game is best played in landscape mode.</p>
-        <img src="/api/placeholder/300/200" alt="Rotate device icon" />
     </div>
 
     <!-- Game Controls -->
-    <nav class="game-controls" id="game-controls">
+    <nav class="game-controls">
         <button class="btn" id="game-menu-button">Menu</button>
         <button class="btn" id="game-restart-button">Restart</button>
         <button class="btn" id="game-instructions-button">Instructions</button>
@@ -168,7 +137,7 @@
     <div id="game-container"></div>
 
     <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobile-controls">
+    <div class="mobile-controls">
         <div class="control-button" id="left-button">←</div>
         <div class="control-button jump-button" id="jump-button">↑</div>
         <div class="control-button" id="right-button">→</div>
@@ -177,62 +146,34 @@
     <!-- Game Scripts -->
     <script type="module" src="js/game.js"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-        window.addEventListener('load', () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/public/service-worker.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(err => {
-                        console.error('ServiceWorker registration failed: ', err);
-                    });
-            }
-        });
-    </script>
-
-    <!-- Game UI Script -->
+    <!-- Prevent unwanted scrolling and touch interactions -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const leftButton = document.getElementById('left-button');
-            const rightButton = document.getElementById('right-button');
-            const jumpButton = document.getElementById('jump-button');
+            const controls = {
+                left: document.getElementById('left-button'),
+                right: document.getElementById('right-button'),
+                jump: document.getElementById('jump-button')
+            };
 
             function simulateKeyEvent(keyCode, type) {
-                const event = new KeyboardEvent(type, {
-                    keyCode: keyCode,
-                    which: keyCode,
-                    key: keyCode === 37 ? 'ArrowLeft' :
-                        keyCode === 39 ? 'ArrowRight' :
-                            keyCode === 38 ? 'ArrowUp' : '',
-                    code: keyCode === 37 ? 'ArrowLeft' :
-                        keyCode === 39 ? 'ArrowRight' :
-                            keyCode === 38 ? 'ArrowUp' : '',
-                    bubbles: true
-                });
-                document.dispatchEvent(event);
+                document.dispatchEvent(new KeyboardEvent(type, { keyCode, bubbles: true }));
             }
 
-            // Touch event handlers
-            function addTouchHandlers(element, keyCode) {
-                element.addEventListener('touchstart', (e) => {
+            function addTouchHandlers(button, keyCode) {
+                button.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     simulateKeyEvent(keyCode, 'keydown');
                 });
-
-                element.addEventListener('touchend', (e) => {
+                button.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     simulateKeyEvent(keyCode, 'keyup');
                 });
             }
 
-            // Add touch handlers to control buttons
-            addTouchHandlers(leftButton, 37);  // Left arrow key
-            addTouchHandlers(rightButton, 39); // Right arrow key
-            addTouchHandlers(jumpButton, 38);  // Up arrow key
+            addTouchHandlers(controls.left, 37);
+            addTouchHandlers(controls.right, 39);
+            addTouchHandlers(controls.jump, 38);
 
-            // Prevent unwanted mobile behaviors
             document.addEventListener('touchmove', (e) => {
                 if (e.target.closest('.control-button') || e.target.closest('#game-container')) {
                     e.preventDefault();
