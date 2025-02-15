@@ -1,28 +1,232 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>CS Student Job Quest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An interactive game about a CS student's journey to find a job">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
-        body {
+        body,
+        html {
             margin: 0;
             padding: 0;
-            background: #000;
+            height: 100%;
+            font-family: 'Orbitron', sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .screen {
+            display: none;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .screen.active {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
+
+        #game-screen.active {
+            display: block;
+            background: none;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
         #game-container {
             width: 100%;
+            height: 100%;
             max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .game-controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(26, 26, 46, 0.8);
+            padding: 10px 0;
+            z-index: 101;
+            display: none;
+            text-align: center;
+        }
+
+        .hud {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #1a1a2e;
+            padding: 10px;
+            z-index: 100;
+            display: none;
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #283c86 0%, #45a247 100%);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 18px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 12px 30px;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            color: #e94560;
         }
     </style>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
+
 <body>
-    <div id="game-container"></div>
+    <nav class="game-controls" id="game-controls">
+        <button class="btn" id="game-menu-button">Menu</button>
+        <button class="btn" id="game-restart-button">Restart</button>
+        <button class="btn" id="game-instructions-button">Instructions</button>
+    </nav>
+
+    <div class="hud" id="hud" aria-live="polite"></div>
+
+    <div id="start-menu-screen" class="screen active">
+        <div class="container">
+            <h1 class="game-title">CS Student Job Quest</h1>
+            <button class="btn" id="play-button">Play</button>
+            <button class="btn" id="settings-button">Settings</button>
+            <button class="btn" id="instructions-button">Instructions</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div id="game-container"></div>
+    </div>
+
+    <div id="settings-screen" class="screen">
+        <div class="container">
+            <h2>Settings</h2>
+            <button class="btn" id="settings-back-button">Back</button>
+        </div>
+    </div>
+
+    <div id="instructions-screen" class="screen">
+        <div class="container">
+            <h2>Instructions</h2>
+            <h3>How to Play:</h3>
+            <ul>
+                <li>Use arrow keys to move</li>
+                <li>Space to interact</li>
+                <li>Collect skills and experience points</li>
+            </ul>
+            <button class="btn" id="instructions-back-button">Back</button>
+        </div>
+    </div>
+
+    <div id="game-over-screen" class="screen">
+        <div class="container">
+            <div id="game-over-message"></div>
+            <button class="btn" id="play-again-button">Play Again</button>
+            <button class="btn" id="main-menu-button">Main Menu</button>
+        </div>
+    </div>
+
     <script type="module" src="js/game.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            class GameUI {
+                constructor() {
+                    this.startMenuScreen = document.getElementById('start-menu-screen');
+                    this.settingsScreen = document.getElementById('settings-screen');
+                    this.instructionsScreen = document.getElementById('instructions-screen');
+                    this.gameContainer = document.getElementById('game-screen');
+                    this.gameOverScreen = document.getElementById('game-over-screen');
+                    this.gameControls = document.getElementById('game-controls');
+                    this.hud = document.getElementById('hud');
+                }
+
+                swapToScreen(screen) {
+                    // Remove active class from all screens
+                    this.startMenuScreen.classList.remove('active');
+                    this.settingsScreen.classList.remove('active');
+                    this.instructionsScreen.classList.remove('active');
+                    this.gameContainer.classList.remove('active');
+                    this.gameOverScreen.classList.remove('active');
+
+                    // Only add active class if we're not going to game screen
+                    if (screen.id !== 'game-screen') {
+                        screen.classList.add('active');
+                    }
+
+                    // Special handling for game screen
+                    if (screen.id === 'game-screen') {
+                        screen.classList.add('active');
+                        this.gameControls.style.display = 'block';
+                        this.hud.style.display = 'block';
+                    } else {
+                        this.gameControls.style.display = 'none';
+                        this.hud.style.display = 'none';
+                    }
+                }
+
+                startGame() {
+                    this.swapToScreen(this.gameContainer);
+                }
+
+                mainMenu() {
+                    this.swapToScreen(this.startMenuScreen);
+                }
+
+                settings() {
+                    this.swapToScreen(this.settingsScreen);
+                }
+
+                instructions() {
+                    this.swapToScreen(this.instructionsScreen);
+                }
+            }
+
+            const gameUI = new GameUI();
+
+            // Event Listeners
+            document.getElementById('play-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('settings-button').addEventListener('click', () => gameUI.settings());
+            document.getElementById('instructions-button').addEventListener('click', () => gameUI.instructions());
+            document.getElementById('settings-back-button').addEventListener('click', () => gameUI.mainMenu());
+            document.getElementById('instructions-back-button').addEventListener('click', () => gameUI.mainMenu());
+            document.getElementById('game-menu-button').addEventListener('click', () => gameUI.mainMenu());
+            document.getElementById('game-restart-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('game-instructions-button').addEventListener('click', () => gameUI.instructions());
+            document.getElementById('play-again-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('main-menu-button').addEventListener('click', () => gameUI.mainMenu());
+        });
+    </script>
 </body>
+
 </html>

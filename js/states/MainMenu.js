@@ -39,9 +39,9 @@ export default class MainMenu extends Phaser.Scene {
             'Start Job Hunt',
             buttonStyle
         )
-        .setOrigin(0.5)
-        .setScale(0.8)
-        .setInteractive();
+            .setOrigin(0.5)
+            .setScale(0.8)
+            .setInteractive();
 
         // Tutorial Button
         const tutorialButton = this.add.text(
@@ -50,9 +50,9 @@ export default class MainMenu extends Phaser.Scene {
             'Career Guide',
             buttonStyle
         )
-        .setOrigin(0.5)
-        .setScale(0.8)
-        .setInteractive();
+            .setOrigin(0.5)
+            .setScale(0.8)
+            .setInteractive();
 
         // Credits Button
         const creditsButton = this.add.text(
@@ -61,9 +61,9 @@ export default class MainMenu extends Phaser.Scene {
             'Office Credits',
             buttonStyle
         )
-        .setOrigin(0.5)
-        .setScale(0.8)
-        .setInteractive();
+            .setOrigin(0.5)
+            .setScale(0.8)
+            .setInteractive();
 
         // Button interactivity
         playButton.on('pointerover', () => playButton.setBackgroundColor('#4d4d4d'));
