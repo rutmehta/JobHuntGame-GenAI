@@ -23,6 +23,7 @@ A unique platformer game that combines classic gaming mechanics with educational
 1. Clone the repository
 2. Make sure you have a web server running (you can use Python's SimpleHTTPServer or any other local server)
 3. Open `index.html` in your browser
+4. We now have a mobile playable version on vercel.
 
 ## Development
 
