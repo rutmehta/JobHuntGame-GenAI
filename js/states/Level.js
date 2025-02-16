@@ -25,7 +25,7 @@ export default class Level extends Phaser.Scene {
         this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background').setOrigin(0, 0);
         this.platforms = this.physics.add.staticGroup();
         this.platforms.create(800, 580, 'platform').setScale(4).refreshBody();
-        
+
         // Ensure function is correctly called
         this.generateRandomPlatforms(this.platforms, 4);
 

@@ -4,240 +4,402 @@
 <head>
     <meta charset="utf-8">
     <title>CS Student Job Quest</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="An interactive game about a CS student's journey to find a job">
-
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1a1a2e">
-    <link rel="manifest" href="/public/manifest.json">
-    <link rel="apple-touch-icon" href="/public/icons/icon-192x192.png">
-
+    <!-- Phaser & nipple.js -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.1/dist/nipplejs.min.js"></script>
     <style>
-        /* Reset and base styles */
-        * {
+        /* Base styles */
+        body,
+        html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
             height: 100%;
-            width: 100%;
-            overflow: hidden;
             font-family: 'Orbitron', sans-serif;
             background-color: #1a1a2e;
             color: #ffffff;
-            overscroll-behavior: none;
         }
 
-        /* Landscape orientation and full-screen game container */
+        .screen {
+            display: none;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-screen.active {
+            display: block;
+            background: none;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
         #game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            /* For desktop */
+            margin: 0 auto;
+        }
+
+        /* Header controls (Menu, Restart, etc.) */
+        .game-controls {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #1a1a2e;
+            width: 100%;
+            background-color: rgba(26, 26, 46, 0.8);
+            padding: 10px 0;
+            z-index: 101;
+            display: none;
+            text-align: center;
+        }
+
+        .hud {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #1a1a2e;
+            padding: 10px;
+            z-index: 100;
+            display: none;
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #283c86 0%, #45a247 100%);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 18px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 12px 30px;
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            color: #e94560;
+        }
+
+        /* Mobile control styles (joystick/buttons) */
+        #joystick-zone {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            display: none;
+            z-index: 1000;
             touch-action: none;
         }
 
-        /* Mobile controls */
-        .mobile-controls {
+        .action-buttons {
             position: fixed;
             bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
+            right: 20px;
+            display: none;
+            gap: 10px;
             z-index: 1000;
-            pointer-events: none;
         }
 
-        .control-button {
+        .action-button {
             width: 60px;
             height: 60px;
-            background: rgba(40, 60, 134, 0.7);
-            border: 2px solid #fff;
+            background: rgba(69, 162, 71, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             color: white;
             font-size: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
             touch-action: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        .jump-button {
-            background: rgba(69, 162, 71, 0.7);
-        }
-
-        /* Game controls */
-        .game-controls {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            gap: 10px;
-            z-index: 1001;
-        }
-
-        .btn {
-            background: rgba(40, 60, 134, 0.7);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        /* Orientation lock for mobile */
+        /* Force the game and container to fill screen on mobile */
         @media (max-width: 768px) {
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background-color: #1a1a2e;
+
+            #joystick-zone,
+            .action-buttons {
+                display: block;
             }
 
-            #orientation-lock {
-                display: none;
+            #game-screen {
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                overflow: hidden;
             }
 
-            * {
-                user-select: none;
-                -webkit-user-select: none;
-            }
-        }
-
-        /* Orientation warning for landscape-only mobile devices */
-        @media (max-width: 768px) and (orientation: portrait) {
-            body {
-                background-color: #1a1a2e;
-            }
-
-            #orientation-lock {
-                display: flex;
-                position: fixed;
-                top: 0;
-                left: 0;
+            #game-container {
+                max-width: none;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.8);
-                color: white;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                z-index: 9999;
-                padding: 20px;
-            }
-
-            #game-container,
-            .mobile-controls,
-            .game-controls {
-                display: none;
+                margin: 0;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Orientation Lock Screen -->
-    <div id="orientation-lock">
-        <h2>Please Rotate Your Device</h2>
-        <p>This game is best played in landscape mode.</p>
-        <img src="/api/placeholder/300/200" alt="Rotate device icon" />
-    </div>
-
-    <!-- Game Controls -->
+    <!-- Game Controls (fixed header) -->
     <nav class="game-controls" id="game-controls">
         <button class="btn" id="game-menu-button">Menu</button>
         <button class="btn" id="game-restart-button">Restart</button>
         <button class="btn" id="game-instructions-button">Instructions</button>
     </nav>
 
-    <!-- Game Container -->
-    <div id="game-container"></div>
+    <!-- HUD -->
+    <div class="hud" id="hud" aria-live="polite"></div>
 
-    <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobile-controls">
-        <div class="control-button" id="left-button">←</div>
-        <div class="control-button jump-button" id="jump-button">↑</div>
-        <div class="control-button" id="right-button">→</div>
+    <!-- Start Menu Screen -->
+    <div id="start-menu-screen" class="screen active">
+        <div class="container">
+            <h1 class="game-title">CS Student Job Quest</h1>
+            <button class="btn" id="play-button">Play</button>
+            <button class="btn" id="settings-button">Settings</button>
+            <button class="btn" id="instructions-button">Instructions</button>
+        </div>
     </div>
 
-    <!-- Game Scripts -->
+    <!-- Main Game Screen -->
+    <div id="game-screen" class="screen">
+        <div id="game-container"></div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen">
+        <div class="container">
+            <h2>Settings</h2>
+            <button class="btn" id="settings-back-button">Back</button>
+        </div>
+    </div>
+
+    <!-- Instructions Screen -->
+    <div id="instructions-screen" class="screen">
+        <div class="container">
+            <h2>Instructions</h2>
+            <h3>How to Play:</h3>
+            <ul>
+                <li>Use arrow keys or joystick to move</li>
+                <li>Space or action button to interact</li>
+                <li>Collect skills and experience points</li>
+            </ul>
+            <button class="btn" id="instructions-back-button">Back</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <div class="container">
+            <div id="game-over-message"></div>
+            <button class="btn" id="play-again-button">Play Again</button>
+            <button class="btn" id="main-menu-button">Main Menu</button>
+        </div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="joystick-zone"></div>
+    <div class="action-buttons">
+        <button class="action-button" id="jump-button">↑</button>
+        <button class="action-button" id="action-button">A</button>
+    </div>
+
+    <!-- Import Phaser game logic after DOM has loaded -->
     <script type="module" src="js/game.js"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-        window.addEventListener('load', () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/public/service-worker.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(err => {
-                        console.error('ServiceWorker registration failed: ', err);
-                    });
-            }
-        });
-    </script>
-
-    <!-- Game UI Script -->
+    <!-- UI & Joystick Setup -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const leftButton = document.getElementById('left-button');
-            const rightButton = document.getElementById('right-button');
-            const jumpButton = document.getElementById('jump-button');
-
-            function simulateKeyEvent(keyCode, type) {
-                const event = new KeyboardEvent(type, {
-                    keyCode: keyCode,
-                    which: keyCode,
-                    key: keyCode === 37 ? 'ArrowLeft' :
-                        keyCode === 39 ? 'ArrowRight' :
-                            keyCode === 38 ? 'ArrowUp' : '',
-                    code: keyCode === 37 ? 'ArrowLeft' :
-                        keyCode === 39 ? 'ArrowRight' :
-                            keyCode === 38 ? 'ArrowUp' : '',
-                    bubbles: true
-                });
-                document.dispatchEvent(event);
-            }
-
-            // Touch event handlers
-            function addTouchHandlers(element, keyCode) {
-                element.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    simulateKeyEvent(keyCode, 'keydown');
-                });
-
-                element.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    simulateKeyEvent(keyCode, 'keyup');
-                });
-            }
-
-            // Add touch handlers to control buttons
-            addTouchHandlers(leftButton, 37);  // Left arrow key
-            addTouchHandlers(rightButton, 39); // Right arrow key
-            addTouchHandlers(jumpButton, 38);  // Up arrow key
-
-            // Prevent unwanted mobile behaviors
-            document.addEventListener('touchmove', (e) => {
-                if (e.target.closest('.control-button') || e.target.closest('#game-container')) {
-                    e.preventDefault();
+            // UI Manager
+            class GameUI {
+                constructor() {
+                    this.startMenuScreen = document.getElementById('start-menu-screen');
+                    this.settingsScreen = document.getElementById('settings-screen');
+                    this.instructionsScreen = document.getElementById('instructions-screen');
+                    this.gameScreen = document.getElementById('game-screen');
+                    this.gameOverScreen = document.getElementById('game-over-screen');
+                    this.gameControls = document.getElementById('game-controls');
+                    this.hud = document.getElementById('hud');
                 }
-            }, { passive: false });
+
+                swapToScreen(screen) {
+                    // Hide all
+                    this.startMenuScreen.classList.remove('active');
+                    this.settingsScreen.classList.remove('active');
+                    this.instructionsScreen.classList.remove('active');
+                    this.gameScreen.classList.remove('active');
+                    this.gameOverScreen.classList.remove('active');
+
+                    // Show target
+                    if (screen.id !== 'game-screen') {
+                        screen.classList.add('active');
+                        this.gameControls.style.display = 'none';
+                        this.hud.style.display = 'none';
+                    } else {
+                        screen.classList.add('active');
+                        this.gameControls.style.display = 'block';
+                        this.hud.style.display = 'block';
+                    }
+                }
+
+                startGame() {
+                    this.swapToScreen(this.gameScreen);
+                }
+
+                mainMenu() {
+                    this.swapToScreen(this.startMenuScreen);
+                }
+
+                settings() {
+                    this.swapToScreen(this.settingsScreen);
+                }
+
+                instructions() {
+                    this.swapToScreen(this.instructionsScreen);
+                }
+            }
+
+            const gameUI = new GameUI();
+
+            // Main Menu Buttons
+            document.getElementById('play-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('settings-button').addEventListener('click', () => gameUI.settings());
+            document.getElementById('instructions-button').addEventListener('click', () => gameUI.instructions());
+
+            // Settings / Instructions Back Buttons
+            document.getElementById('settings-back-button').addEventListener('click', () => gameUI.mainMenu());
+            document.getElementById('instructions-back-button').addEventListener('click', () => gameUI.mainMenu());
+
+            // In-Game Menu Buttons
+            document.getElementById('game-menu-button').addEventListener('click', () => gameUI.mainMenu());
+            document.getElementById('game-restart-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('game-instructions-button').addEventListener('click', () => gameUI.instructions());
+
+            // Game Over Buttons
+            document.getElementById('play-again-button').addEventListener('click', () => gameUI.startGame());
+            document.getElementById('main-menu-button').addEventListener('click', () => gameUI.mainMenu());
+
+            // Joystick Initialization
+            let joystick = nipplejs.create({
+                zone: document.getElementById('joystick-zone'),
+                mode: 'semi',
+                position: { left: '50%', top: '50%' },
+                color: 'white',
+                size: 100
+            });
+
+            let moveLeft = false;
+            let moveRight = false;
+
+            // Dispatch keyboard-like events on 'window' with full key data
+            joystick.on('move', (evt, data) => {
+                if (data.direction) {
+                    if (data.direction.x === 'left' && !moveLeft) {
+                        moveLeft = true;
+                        moveRight = false;
+                        window.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'ArrowLeft',
+                            code: 'ArrowLeft',
+                            keyCode: 37
+                        }));
+                    } else if (data.direction.x === 'right' && !moveRight) {
+                        moveRight = true;
+                        moveLeft = false;
+                        window.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'ArrowRight',
+                            code: 'ArrowRight',
+                            keyCode: 39
+                        }));
+                    }
+                }
+            });
+
+            joystick.on('end', () => {
+                if (moveLeft) {
+                    window.dispatchEvent(new KeyboardEvent('keyup', {
+                        key: 'ArrowLeft',
+                        code: 'ArrowLeft',
+                        keyCode: 37
+                    }));
+                }
+                if (moveRight) {
+                    window.dispatchEvent(new KeyboardEvent('keyup', {
+                        key: 'ArrowRight',
+                        code: 'ArrowRight',
+                        keyCode: 39
+                    }));
+                }
+                moveLeft = false;
+                moveRight = false;
+            });
+
+            // Jump Button
+            const jumpButton = document.getElementById('jump-button');
+            jumpButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'ArrowUp',
+                    code: 'ArrowUp',
+                    keyCode: 38
+                }));
+            });
+            jumpButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: 'ArrowUp',
+                    code: 'ArrowUp',
+                    keyCode: 38
+                }));
+            });
+
+            // Action Button (Space)
+            const actionButton = document.getElementById('action-button');
+            actionButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: ' ',
+                    code: 'Space',
+                    keyCode: 32
+                }));
+            });
+            actionButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                window.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: ' ',
+                    code: 'Space',
+                    keyCode: 32
+                }));
+            });
         });
     </script>
 </body>
