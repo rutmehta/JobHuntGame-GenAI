@@ -1,4 +1,4 @@
-// Level.js (Fixed Audio and Platform Function Issue)
+// Level.js
 import LevelComplete from './LevelComplete.js';
 
 export default class Level extends Phaser.Scene {
@@ -8,28 +8,34 @@ export default class Level extends Phaser.Scene {
     }
 
     init(data) {
+        // Use passed-in data to set current level (fallback to 1 if undefined)
         this.levelNumber = data.levelNumber || 1;
     }
 
     create() {
-        // Ensure Phaser is properly loaded
+        // Safety check
         if (typeof Phaser === 'undefined') {
-            console.error('Phaser is not loaded correctly. Check the script reference in index.html');
+            console.error('Phaser is not loaded correctly. Check your script references.');
             return;
         }
 
-        // Set world bounds
+        // World bounds
         this.physics.world.setBounds(0, 0, 1600, 600);
 
-        // Background and platforms
-        this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background').setOrigin(0, 0);
+        // Background
+        this.bg = this.add.tileSprite(0, 0, 1600, 600, 'background')
+            .setOrigin(0, 0);
+
+        // Platforms
         this.platforms = this.physics.add.staticGroup();
-        this.platforms.create(800, 580, 'platform').setScale(4).refreshBody();
-        
-        // Ensure function is correctly called
+        this.platforms.create(800, 580, 'platform')
+            .setScale(4)
+            .refreshBody();
+
+        // Randomly create a few more platforms
         this.generateRandomPlatforms(this.platforms, 4);
 
-        // Create player
+        // Player
         this.player = this.physics.add.sprite(100, 300, 'player');
         this.player.setScale(0.4);
         this.player.setCollideWorldBounds(true);
@@ -42,13 +48,11 @@ export default class Level extends Phaser.Scene {
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'turn',
             frames: [{ key: 'player', frame: 4 }],
             frameRate: 20
         });
-
         this.anims.create({
             key: 'right',
             frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }),
@@ -56,33 +60,39 @@ export default class Level extends Phaser.Scene {
             repeat: -1
         });
 
-        // Set up camera
+        // Camera setup
         this.cameras.main.setBounds(0, 0, 1600, 600);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-        // Set up controls
+        // Create Phaser’s built-in cursor keys (left, right, up, down)
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        // Also track space as jump if you like
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     }
 
     update() {
-        // Movement logic
+        // Horizontal movement
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
             this.player.anims.play('left', true);
-        } else if (this.cursors.right.isDown) {
+        } 
+        else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
             this.player.anims.play('right', true);
-        } else {
+        } 
+        else {
             this.player.setVelocityX(0);
             this.player.anims.play('turn');
         }
 
+        // Jumping (only if on the ground)
+        // If you want "cursors.up" AND space bar to both allow jump:
         if ((this.cursors.up.isDown || this.spaceKey.isDown) && this.player.body.blocked.down) {
             this.player.setVelocityY(-500);
         }
 
-        // Check if player reaches the end of the screen
+        // Check if player reaches the far right edge -> complete level
         if (this.player.x >= 1550) {
             this.completeLevel();
         }
@@ -107,11 +117,13 @@ export default class Level extends Phaser.Scene {
                 .setImmovable(true)
                 .setScale(Phaser.Math.FloatBetween(0.8, 1.2))
                 .refreshBody();
+
             prevX = x;
         }
     }
 
     completeLevel() {
+        // Transition to the LevelComplete scene
         this.scene.start('LevelComplete', { levelNumber: this.levelNumber });
     }
 }
