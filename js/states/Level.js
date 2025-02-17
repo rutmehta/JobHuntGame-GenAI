@@ -69,8 +69,82 @@ export default class Level extends Phaser.Scene {
 
         // Also track space as jump if you like
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // Add reference to the Q key
+        this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+
+        // Create the question prompt UI (initially hidden)
+        this.createQuestionPrompt();
+
     }
 
+    createQuestionPrompt() {
+        // Container to hold everything
+        this.questionContainer = this.add.container(100, 100);
+    
+        // Semi-transparent background
+        const bg = this.add.graphics();
+        bg.fillStyle(0x000000, 0.8);
+        bg.fillRect(0, 0, 600, 250);
+    
+        // Question text
+        this.questionText = this.add.text(20, 20, "What’s 2 + 2?", {
+            fontSize: '20px',
+            fill: '#FFFFFF'
+        });
+    
+        // Option texts
+        this.options = [
+            this.add.text(20, 60, 'A) 3',  { fontSize: '16px', fill: '#FFFFFF', backgroundColor: null }),
+            this.add.text(20, 90, 'B) 4',  { fontSize: '16px', fill: '#FFFFFF', backgroundColor: null }),
+            this.add.text(20, 120, 'C) 5', { fontSize: '16px', fill: '#FFFFFF', backgroundColor: null }),
+            this.add.text(20, 150, 'D) 22',{ fontSize: '16px', fill: '#FFFFFF', backgroundColor: null })
+        ];
+    
+        // Track currently selected option (-1 = none)
+        this.selectedOptionIndex = -1;
+    
+        // Make each option interactive and highlight on click
+        this.options.forEach((optionText, index) => {
+            optionText.setInteractive();
+            optionText.on('pointerdown', () => {
+                // Un-highlight previous selection
+                if (this.selectedOptionIndex !== -1) {
+                    const prevText = this.options[this.selectedOptionIndex];
+                    prevText.setStyle({ fill: '#FFFFFF', backgroundColor: null });
+                }
+    
+                // Highlight this one
+                this.selectedOptionIndex = index;
+                optionText.setStyle({ fill: '#FFFF00', backgroundColor: '#333333' });
+            });
+        });
+    
+        // Submit button
+        this.submitButton = this.add.text(20, 190, '[ Submit Answer ]', {
+            fontSize: '18px',
+            fill: '#FFFFFF',
+            backgroundColor: '#006400',  // Dark green
+            padding: { x: 10, y: 5 }
+        })
+        .setInteractive()
+        .on('pointerover', () => {
+            // Change color or style on hover
+            this.submitButton.setStyle({ backgroundColor: '#228B22' });
+        })
+        .on('pointerout', () => {
+            // Revert style
+            this.submitButton.setStyle({ backgroundColor: '#006400' });
+        })
+        .on('pointerdown', () => this.submitAnswer());
+    
+        // Add items to container
+        this.questionContainer.add([ bg, this.questionText, ...this.options, this.submitButton ]);
+    
+        // Hide by default
+        this.questionContainer.setVisible(false);
+    }
+    
     update() {
         // Horizontal movement
         if (this.cursors.left.isDown) {
@@ -96,8 +170,38 @@ export default class Level extends Phaser.Scene {
         if (this.player.x >= 1550) {
             this.completeLevel();
         }
+
+        // Show the question prompt when Q is pressed
+        if (Phaser.Input.Keyboard.JustDown(this.qKey)) {
+            this.questionContainer.setVisible(true);
+        }
     }
 
+    submitAnswer() {
+        // If nothing is selected, you can provide a warning or do nothing
+        if (this.selectedOptionIndex === -1) {
+            console.log("No option selected!");
+            // You could display some text like "Please select an answer first."
+            return;
+        }
+    
+        // Check correctness: suppose correct answer is index 1 (B)
+        if (this.selectedOptionIndex === 1) {
+            console.log("Correct! B) 4");
+        } else {
+            console.log("Incorrect!");
+        }
+    
+        // Hide the prompt after submission
+        this.questionContainer.setVisible(false);
+    
+        // Optionally reset the selection
+        this.selectedOptionIndex = -1;
+        this.options.forEach(option => {
+            option.setStyle({ fill: '#FFFFFF', backgroundColor: null });
+        });
+    }
+    
     generateRandomPlatforms(platforms, count) {
         const bounds = {
             minX: 100, maxX: 1500,
