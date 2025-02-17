@@ -22,6 +22,10 @@ export default class Preloader extends Phaser.Scene {
         // In Preloader.js inside the preload() method
         this.load.audio('bgMusic', 'assets/audio/background_music.mp3');
 
+        // Preloader.js
+        this.load.image('muteIcon', 'assets/images/mute.png');
+        this.load.image('unmuteIcon', 'assets/images/unmute.png');
+
         // Update progress bar
         this.load.on('progress', (value) => {
             progressBar.clear();
@@ -59,6 +63,9 @@ export default class Preloader extends Phaser.Scene {
     create() {
         // Create animations
         this.createAnimations();
+        
+        // Launch the UI scene now that assets have been loaded
+        this.scene.launch('UIScene');
 
         // Start the main menu
         this.scene.start('MainMenu');
