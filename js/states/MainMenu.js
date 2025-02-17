@@ -7,15 +7,6 @@ export default class MainMenu extends Phaser.Scene {
         // Add background
         this.add.image(400, 300, 'background');
 
-        // Create the background music sound instance with looping enabled
-        this.bgMusic = this.sound.add('bgMusic', {
-            volume: 0.5, // Adjust volume as needed
-            loop: true
-        });
-
-        // Play the background music
-        this.bgMusic.play();
-
         // Title text
         this.add.text(400, 150, 'CS Career Quest', {
             font: '48px Arial',
